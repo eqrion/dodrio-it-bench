@@ -1,0 +1,62 @@
+[package]
+authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
+edition = "2018"
+name = "dodrio-todomvc"
+version = "0.1.0"
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.profiling]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[dependencies]
+cfg-if = "0.1.10"
+dodrio = { path = "../..", features = ["serde"] }
+fxhash = "0.2.1"
+js-sys = "0.3.32"
+serde = { features = ["derive"], version = "1.0.106" }
+serde_json = "1.0.51"
+wasm-bindgen = "0.2.60"
+wasm-bindgen-futures = "0.4.10"
+
+# Optional dependencies for logging.
+console_error_panic_hook = { optional = true, version = "0.1.6" }
+console_log = { optional = true, version = "0.1.2" }
+log = { optional = true, version = "0.4.8" }
+
+[dependencies.web-sys]
+version = "0.3.32"
+features = [
+    "Document",
+    "Event",
+    "EventTarget",
+    "HtmlElement",
+    "HtmlInputElement",
+    "KeyboardEvent",
+    "Location",
+    "Storage",
+    "Node",
+    "Window",
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.5"
+
+[features]
+default = [ "rust-interpreter", "logging" ]
+logging = [
+    "console_log",
+    "console_error_panic_hook",
+    "log",
+    "dodrio/log"
+]
+rust-interpreter = [
+    "dodrio/rust-interpreter"
+]
+
+[lib]
+crate-type = ["cdylib"]

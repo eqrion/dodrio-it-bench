@@ -97,7 +97,7 @@ BenchmarkRunner.prototype._waitAndWarmUp = function () {
 }
 
 // This function ought be as simple as possible. Don't even use SimplePromise.
-BenchmarkRunner.prototype._runTest = function(suite, testFunction, prepareReturnValue, callback)
+BenchmarkRunner.prototype._runTest = async function(suite, testFunction, prepareReturnValue, callback)
 {
     var now = window.performance && window.performance.now ? function () { return window.performance.now(); } : Date.now;
 
@@ -105,7 +105,7 @@ BenchmarkRunner.prototype._runTest = function(suite, testFunction, prepareReturn
     var contentDocument = this._frame.contentDocument;
 
     var startTime = now();
-    testFunction(prepareReturnValue, contentWindow, contentDocument);
+    await testFunction(prepareReturnValue, contentWindow, contentDocument);
     var endTime = now();
     var syncTime = endTime - startTime;
 
@@ -156,8 +156,12 @@ BenchmarkState.prototype.isFirstTest = function () {
 BenchmarkState.prototype.prepareCurrentSuite = function (runner, frame) {
     var suite = this.currentSuite();
     var promise = new SimplePromise;
+    suite.before(frame.contentWindow);
     frame.onload = function () {
-        suite.prepare(runner, frame.contentWindow, frame.contentDocument).then(function (result) { promise.resolve(result); });
+        let prepare = suite.prepare(runner, frame.contentWindow, frame.contentDocument)
+            .then(function (result) {
+                promise.resolve(result);
+            });
     }
     frame.src = suite.url;
     return promise;
@@ -196,8 +200,8 @@ BenchmarkRunner.prototype._runTestAndRecordResults = function (state) {
         this._client.willRunTest(suite, test);
 
     var self = this;
-    setTimeout(function () {
-        self._runTest(suite, test.run, self._prepareReturnValue, function (syncTime, asyncTime) {
+    setTimeout(async function () {
+        await self._runTest(suite, test.run, self._prepareReturnValue, function (syncTime, asyncTime) {
             var suiteResults = self._measuredValues[suite.name] || {tests:{}, total: 0};
             self._measuredValues[suite.name] = suiteResults;
             suiteResults.tests[test.name] = {'Sync': syncTime, 'Async': asyncTime};
